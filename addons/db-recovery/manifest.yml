@@ -6,7 +6,7 @@ description:
   short: The add-on performs a comprehensive diagnostic of your database cluster and can perform automatic recovery.
 logo: https://raw.githubusercontent.com/jelastic-jps/mysql-cluster/master/addons/recovery/images/database-recovery.png
 
-baseUrl: https://raw.githubusercontent.com/jelastic-jps/wordpress-multiregion-standalone/JE-62666/addons/db-recovery
+baseUrl: https://raw.githubusercontent.com/hosteur-sa-ch/rag-hosteur-mtr-mysql/main/addons/db-recovery
 
 targetNodes:
   nodeGroup: 
@@ -20,7 +20,7 @@ globals:
   app_id: db-recovery
   ssh_root: /root/.ssh/
   ssh-key: id_rsa_db_monitoring
-  nodeGroup: cp
+  nodeGroup: sqldb
   tmp: /tmp/
 
 buttons:
@@ -52,8 +52,8 @@ settings:
       type: string
       required: true
 
-onAfterScaleOut[cp]: generate-share-keys
-onAfterRedeployContainer[cp]: generate-share-keys
+onAfterScaleOut[sqldb]: generate-share-keys
+onAfterRedeployContainer[sqldb]: generate-share-keys
 
 onInstall:
   - getReplicaUser
@@ -67,7 +67,7 @@ onInstall:
           type: success
     - else:
       - generate-share-keys:
-          id: ${nodes.cp.master.id}
+          id: ${nodes.sqldb.master.id}
       - createFile:
           envName: ${globals.secondaryEnvName}
           nodeGroup: ${targetNodes.nodeGroup}
@@ -166,7 +166,7 @@ actions:
           envName: "${env.name}",
           session: session,
           path: "${globals.tmp}${globals.ssh-key}.pub",
-          nodeid: "${nodes.cp.master.id}" 
+          nodeid: "${nodes.sqldb.master.id}" 
         });
         if (resp.result != 0) return resp;
         key = resp.body;
@@ -204,7 +204,7 @@ globals:
   app_id: db-recovery
   ssh_root: /root/.ssh/
   ssh-key: id_rsa_db_monitoring
-  nodeGroup: cp
+  nodeGroup: sqldb
   tmp: /tmp/
 
 buttons:
@@ -236,8 +236,8 @@ settings:
       type: string
       required: true
 
-onAfterScaleOut[cp]: generate-share-keys
-onAfterRedeployContainer[cp]: generate-share-keys
+onAfterScaleOut[sqldb]: generate-share-keys
+onAfterRedeployContainer[sqldb]: generate-share-keys
 
 onInstall:
   - getReplicaUser
@@ -251,7 +251,7 @@ onInstall:
           type: success
     - else:
       - generate-share-keys:
-          id: ${nodes.cp.master.id}
+          id: ${nodes.sqldb.master.id}
       - createFile:
           envName: ${globals.secondaryEnvName}
           nodeGroup: ${targetNodes.nodeGroup}
@@ -350,7 +350,7 @@ actions:
           envName: "${env.name}",
           session: session,
           path: "${globals.tmp}${globals.ssh-key}.pub",
-          nodeid: "${nodes.cp.master.id}" 
+          nodeid: "${nodes.sqldb.master.id}" 
         });
         if (resp.result != 0) return resp;
         key = resp.body;
@@ -379,7 +379,7 @@ actions:
           envName: "${env.name}",
           session: session,
           path: "${globals.tmp}${globals.ssh-key}",
-          nodeid: "${nodes.cp.master.id}" 
+          nodeid: "${nodes.sqldb.master.id}" 
         });
         if (resp.result != 0) return resp;
         key = resp.body;
@@ -405,7 +405,7 @@ actions:
         if (resp.result != 0) return resp;
         
         return api.env.control.ExecCmdByGroup("${globals.secondaryEnvName}", session, "${globals.nodeGroup}", toJSON([{ command: "sed -i '/db_monitoring/d' ${globals.ssh_root}authorized_keys; mv ${globals.tmp}${globals.ssh-key}* ${globals.ssh_root}; cat ${globals.ssh_root}${globals.ssh-key}.pub >> ${globals.ssh_root}authorized_keys" }]), true, false, "root");
-    - cmd [cp]: |-
+    - cmd [sqldb]: |-
         mv ${globals.tmp}${globals.ssh-key}* ${globals.ssh_root}
         cat ${globals.ssh_root}${globals.ssh-key}.pub >> ${globals.ssh_root}authorized_keys
       user: root
@@ -425,11 +425,11 @@ actions:
       password: ${settings.password:}
       
   installJQTool:
-    cmd [cp]: rpm -qa | grep jq || yum -y install jq
+    cmd [sqldb]: rpm -qa | grep jq || yum -y install jq
     user: root
           session: session,
           path: "${globals.tmp}${globals.ssh-key}",
-          nodeid: "${nodes.cp.master.id}" 
+          nodeid: "${nodes.sqldb.master.id}" 
         });
         if (resp.result != 0) return resp;
         key = resp.body;
@@ -455,7 +455,7 @@ actions:
         if (resp.result != 0) return resp;
         
         return api.env.control.ExecCmdByGroup("${globals.secondaryEnvName}", session, "${globals.nodeGroup}", toJSON([{ command: "sed -i '/db_monitoring/d' ${globals.ssh_root}authorized_keys; mv ${globals.tmp}${globals.ssh-key}* ${globals.ssh_root}; cat ${globals.ssh_root}${globals.ssh-key}.pub >> ${globals.ssh_root}authorized_keys" }]), true, false, "root");
-    - cmd [cp]: |-
+    - cmd [sqldb]: |-
         mv ${globals.tmp}${globals.ssh-key}* ${globals.ssh_root}
         cat ${globals.ssh_root}${globals.ssh-key}.pub >> ${globals.ssh_root}authorized_keys
       user: root
@@ -475,5 +475,5 @@ actions:
       password: ${settings.password:}
       
   installJQTool:
-    cmd [cp]: rpm -qa | grep jq || yum -y install jq
+    cmd [sqldb]: rpm -qa | grep jq || yum -y install jq
     user: root
