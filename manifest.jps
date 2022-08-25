@@ -57,6 +57,8 @@ onInstall:
   - setGlobals:
       domain: ${settings.envName}-1.${globals.domain-1}
   - createEnvs
+  - createGroupTagEnvs
+  - attachEnvsToGroupTag
   - getEnvNodes
   - installReplications
 

@@ -71,13 +71,13 @@ actions:
         var resp = jelastic.env.control.GetEnvInfo("${globals.cluster_name}-MTR-1", session);
         if (resp.result != 0) return resp;
         for (var i = 0, k = resp.nodes; i < k.length; i++) {
-          if (k[i].nodeGroup == 'cp')
+          if (k[i].nodeGroup == 'sqldb')
               k[i].ismaster ? glbs["master1_ip"] = k[i].address : 0;
         }
         var resp = jelastic.env.control.GetEnvInfo("${globals.cluster_name}-MTR-2", session);
         if (resp.result != 0) return resp;
         for (var i = 0, k = resp.nodes; i < k.length; i++) {
-          if (k[i].nodeGroup == 'cp')
+          if (k[i].nodeGroup == 'sqldb')
               k[i].ismaster ? glbs["master2_ip"] = k[i].address : 0;
         }
         return { result: 0, onAfterReturn: onAfterReturn };
