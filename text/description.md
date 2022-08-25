@@ -1,0 +1,1 @@
+# Install MariaDB Master-Master Replication cluster between 2 Regions (prefered ODIN / THOR)
