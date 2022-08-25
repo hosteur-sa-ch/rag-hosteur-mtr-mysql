@@ -1,0 +1,144 @@
+version: 1.0
+type: install
+id: hstrag-mtr-mysql
+name: MySQL Multi-Region Deployment Cluster
+
+
+categories:
+  - apps/clustered-dbs
+  - apps/popular
+  - apps/clusters
+
+description: 
+  text: "/texts/description.md?_r=1"
+  short: A set of MySQL/MariaDB cluster topologies
+  
+logo: /images/logo-hosteur_ico_2021.png?_r=1
+
+onBeforeInit: /scripts/settings.js?_r=${fn.random}
+
+mixins:
+  - https://raw.githubusercontent.com/jelastic-jps/wordpress-multiregion-standalone/master/configs/additionalGlobals.yaml
+
+baseUrl: https://raw.githubusercontent.com/hosteur-sa-ch/rag-hosteur-mtr-mysql/main
+
+settings:
+  fields:
+    - caption: Regions
+      type: regionlist
+      name: regions
+      disableInactive: true
+      selectFirstAvailable: false
+      multiSelect: true
+      required: true
+      min: 2
+      max: 2
+
+    - caption: Environment
+      type: envname
+      name: envName
+      dependsOn: region
+      randomName: true
+      showFullDomain: false
+      required: true
+
+globals:
+  db_user: user-${fn.random}
+  db_pass: ${fn.password(10)}
+  sync_pass: ${fn.password(10)}
+  repl_user: repl-${fn.random}
+  repl_pass: ${fn.password(10)}
+  success: default
+
+
+onInstall:
+  - initGlobals
+  - setGlobals:
+      domain: ${settings.envName}-1.${globals.domain-1}
+  - createEnvs
+  - getEnvNodes
+  - installReplications
+
+actions:
+
+  initGlobals:
+    - script: |
+        var regions = '${settings.regions}'.split(','),
+            envGroups = eval('(' + MANIFEST + ')').envGroups, index,
+            onAfterReturn = { setGlobals: {} }, 
+            glbs = onAfterReturn.setGlobals,
+            resp, domain;
+        resp = jelastic.env.control.GetRegions(appid, session);
+        if (resp.result != 0) return resp;
+        resp = resp.array;
+        for (var i = 0, n = regions.length; i < n; i ++) {
+          index = i + 1;
+          glbs["region-" + index] = regions[i];
+          for (var a = 0, b = resp.length; a < b; a++) {
+            for (var k = 0, l = resp[a].hardNodeGroups.length; k < l; k++) {
+              if (resp[a].hardNodeGroups[k].uniqueName == regions[i])
+                glbs["domain-" + index] = resp[a].domain;
+            }
+          }
+          glbs["displayName-" + index] = "MySQL Master " + index;          
+        }
+        glbs["envGroups"] = envGroups;
+        glbs["regionsCount"] = regions.length;
+        glbs["master_env_name"] = "${settings.envName}-MTR-1";
+        return { result: 0, onAfterReturn: onAfterReturn };
+
+  createEnvs:
+    - script: |
+        var regions = '${settings.regions}'.split(','), actions = [];
+        var envGroups = eval('(' + MANIFEST + ')').envGroups;
+        for (var cluster = 1, n = regions.length + 1; cluster < n; cluster ++) {
+          actions.push({
+            jps: "${globals.base_path}/scripts/mysqlstd.jps?_r=${fn.random}",
+            envName: "${settings.envName}-MTR-" + cluster,
+            loggerName: "${settings.envName}-MTR-" + cluster,
+            envGroups: envGroups,
+            displayName: "${globals.displayName-" + cluster + "}",
+            region: "${globals.region-" + cluster + "}",
+            settings: {
+              "name": "mariadb-dockerized",
+              "scheme": "${settings.waf}",
+              "wp_protect": "${settings.wp_protect}",
+              "le-addon": "false",
+              "cdn-addon": "false",
+              "isSingleDeploy": "false"
+            }
+          });
+        }
+        return { result: 0, onAfterReturn: { 'marketplace.jps.install': actions } };
+
+  getEnvNodes:
+    - script: |
+        var regions = '${settings.regions}'.split(','),
+            onAfterReturn = { setGlobals: {} },
+            glbs = onAfterReturn.setGlobals;
+        for (var cluster = 1, n = regions.length + 1; cluster < n; cluster ++) {
+          var resp = jelastic.env.control.GetEnvInfo('${settings.envName}-' + cluster, session);
+          if (resp.result != 0) return resp;
+          for (var i = 0, k = resp.nodes; i < k.length; i++) {
+            if (k[i].nodeGroup == 'cp') 
+              k[i].ismaster ? glbs["master_id_cp-" + cluster] = k[i].id : 0;
+          }
+        }
+        return { result: 0, onAfterReturn: onAfterReturn };
+
+  installReplications:
+    - install:
+      - jps: /scripts/primaryReplicationManager.jps
+        envName: ${settings.envName}-1
+        settings:
+          db_user: ${globals.db_user}
+          db_pass: ${globals.db_pass}
+          repl_user: ${globals.repl_user}
+          repl_pass: ${globals.repl_pass}
+          cluster_name: ${settings.envName}
+
+success:
+  email: /success/email/success-${globals.success}.md?_r=${fn.random}
+  text: /success/text/success-${globals.success}.md?_r=${fn.random}
+
+startPage: ${globals.protocol}://${globals.domain}/

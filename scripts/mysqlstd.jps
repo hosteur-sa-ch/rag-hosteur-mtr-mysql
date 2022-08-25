@@ -1,0 +1,18 @@
+version: 1.0
+type: install
+id: hstrag-mtr-mysqlstd
+name: MySQL Multi-Region Deployment Cluster (instance deploy)
+logo: images/logo-hosteur_ico_2021.png
+
+categories:
+  - apps/clustered-dbs
+  - apps/popular
+  - apps/clusters
+
+baseUrl: https://raw.githubusercontent.com/hosteur-sa-ch/rag-hosteur-mtr-mysql/main
+
+nodes:
+- nodeType: mariadb10
+  cloudlets: 16
+
+success: MySQL instance OK
