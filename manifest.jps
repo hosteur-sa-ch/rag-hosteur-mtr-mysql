@@ -10,10 +10,10 @@ categories:
   - apps/clusters
 
 description: 
-  text: "/texts/description.md?_r=1"
+  text: "/texts/description.md?_r=${fn.random}"
   short: A set of MySQL/MariaDB cluster topologies
   
-logo: /images/logo-hosteur_ico_2021.png?_r=1
+logo: /images/logo-hosteur_ico_2021.png?_r=${fn.random}
 
 onBeforeInit: /scripts/settings.js?_r=${fn.random}
 
@@ -57,8 +57,6 @@ onInstall:
   - setGlobals:
       domain: ${settings.envName}-1.${globals.domain-1}
   - createEnvs
-  - createGroupTagEnvs
-  - attachEnvsToGroupTag
   - getEnvNodes
   - installReplications
 
@@ -108,16 +106,15 @@ actions:
 
   createGroupTagEnvs:
     - script: |
-        for (var cluster = 1, n = regions.length + 1; cluster < n; cluster ++) {
-          actions.push({
+        actions.push({
             envName: "${settings.envName}-MTR-" + cluster,
             envGroup: "${settings.envName}-MTR"
-          });
-        }
+        });
         return { result: 0, onAfterReturn: { 'environment.group.creategroup': actions } };
 
   attachEnvsToGroupTag:
     - script: |
+        var regions = '${settings.regions}'.split(','), actions = [];
         for (var cluster = 1, n = regions.length + 1; cluster < n; cluster ++) {
           actions.push({
             envName: "${settings.envName}-MTR-" + cluster,
@@ -125,8 +122,6 @@ actions:
           });
         }
         return { result: 0, onAfterReturn: { 'environment.group.attachenv': actions } };
-
-
 
   getEnvNodes:
     - script: |

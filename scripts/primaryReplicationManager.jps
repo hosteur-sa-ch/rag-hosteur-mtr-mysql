@@ -14,11 +14,6 @@ globals:
 
 onInstall:
   - getClusterEnvs
-  - if ('${env.envName}' == '${globals.cluster_name}-MTR-1'):
-    - install: 
-      jps: /addons/db-recovery/manifest.yml?_r=${fn.random}
-      nodeGroup: sqldb
-      targetNodes: sqldb
 
   - initialPrimaryReplication
   - startPrimaryReplication
