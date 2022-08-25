@@ -15,4 +15,6 @@ nodes:
 - nodeType: mariadb10
   cloudlets: 16
 
+skipNodeEmails: true
+
 success: MySQL instance OK

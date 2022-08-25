@@ -2,10 +2,10 @@ jpsType: update
 id: multiregions-primary-replication
 name: Multi-Regions Primary Replication
 description: Multi-Regions Primary Replication
-baseUrl: https://raw.githubusercontent.com/jelastic-jps/wordpress-multiregions/master
+baseUrl: https://raw.githubusercontent.com/hosteur-sa-ch/rag-hosteur-mtr-mysql/main
 
 mixins:
-  - https://raw.githubusercontent.com/jelastic-jps/wordpress-multiregion-standalone/master/configs/additionalGlobals.yaml
+  - https://raw.githubusercontent.com/hosteur-sa-ch/rag-hosteur-mtr-mysql/main/configs/additionalGlobals.yaml
 
 globals:
   master: ${settings.master:false}

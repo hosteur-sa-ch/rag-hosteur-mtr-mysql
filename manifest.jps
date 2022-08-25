@@ -17,10 +17,11 @@ logo: /images/logo-hosteur_ico_2021.png?_r=1
 
 onBeforeInit: /scripts/settings.js?_r=${fn.random}
 
-mixins:
-  - https://raw.githubusercontent.com/jelastic-jps/wordpress-multiregion-standalone/master/configs/additionalGlobals.yaml
-
 baseUrl: https://raw.githubusercontent.com/hosteur-sa-ch/rag-hosteur-mtr-mysql/main
+
+mixins:
+  - https://raw.githubusercontent.com/hosteur-sa-ch/rag-hosteur-mtr-mysql/main/configs/additionalGlobals.yaml
+
 
 settings:
   fields:
@@ -56,6 +57,8 @@ onInstall:
   - setGlobals:
       domain: ${settings.envName}-1.${globals.domain-1}
   - createEnvs
+  - createGroupTagEnvs
+  - attachEnvsToGroupTag
   - getEnvNodes
   - installReplications
 
@@ -98,18 +101,32 @@ actions:
             loggerName: "${settings.envName}-MTR-" + cluster,
             envGroups: envGroups,
             displayName: "${globals.displayName-" + cluster + "}",
-            region: "${globals.region-" + cluster + "}",
-            settings: {
-              "name": "mariadb-dockerized",
-              "scheme": "${settings.waf}",
-              "wp_protect": "${settings.wp_protect}",
-              "le-addon": "false",
-              "cdn-addon": "false",
-              "isSingleDeploy": "false"
-            }
+            region: "${globals.region-" + cluster + "}"
           });
         }
         return { result: 0, onAfterReturn: { 'marketplace.jps.install': actions } };
+
+  createGroupTagEnvs:
+    - script: |
+        for (var cluster = 1, n = regions.length + 1; cluster < n; cluster ++) {
+          actions.push({
+            envName: "${settings.envName}-MTR-" + cluster,
+            envGroup: "${settings.envName}-MTR"
+          });
+        }
+        return { result: 0, onAfterReturn: { 'environment.group.creategroup': actions } };
+
+  attachEnvsToGroupTag:
+    - script: |
+        for (var cluster = 1, n = regions.length + 1; cluster < n; cluster ++) {
+          actions.push({
+            envName: "${settings.envName}-MTR-" + cluster,
+            envGroup: "${settings.envName}-MTR"
+          });
+        }
+        return { result: 0, onAfterReturn: { 'environment.group.attachenv': actions } };
+
+
 
   getEnvNodes:
     - script: |
@@ -117,7 +134,7 @@ actions:
             onAfterReturn = { setGlobals: {} },
             glbs = onAfterReturn.setGlobals;
         for (var cluster = 1, n = regions.length + 1; cluster < n; cluster ++) {
-          var resp = jelastic.env.control.GetEnvInfo('${settings.envName}-' + cluster, session);
+          var resp = jelastic.env.control.GetEnvInfo('${settings.envName}-MTR-' + cluster, session);
           if (resp.result != 0) return resp;
           for (var i = 0, k = resp.nodes; i < k.length; i++) {
             if (k[i].nodeGroup == 'cp') 
@@ -129,7 +146,7 @@ actions:
   installReplications:
     - install:
       - jps: /scripts/primaryReplicationManager.jps
-        envName: ${settings.envName}-1
+        envName: ${settings.envName}-MTR-1
         settings:
           db_user: ${globals.db_user}
           db_pass: ${globals.db_pass}
