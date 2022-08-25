@@ -108,8 +108,9 @@ actions:
 
   createGroupTagEnvs:
     - script: |
+        var regions = '${settings.regions}'.split(','), actions = [];
         actions.push({
-            envName: "${settings.envName}-MTR-" + cluster,
+            envName: "${settings.envName}-MTR-1",
             envGroup: "${settings.envName}-MTR"
         });
         return { result: 0, onAfterReturn: { 'environment.group.creategroup': actions } };

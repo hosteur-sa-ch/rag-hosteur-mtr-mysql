@@ -32,7 +32,7 @@ actions:
             actions = [], master;
         for (var i = 0, n = envs.length; i < n; i ++) {
           master = false;
-          if ((envs[i] == "${globals.cluster_name}-1") || (envs[i] == "${globals.cluster_name}-2"))
+          if ((envs[i] == "${globals.cluster_name}-MTR-1") || (envs[i] == "${globals.cluster_name}-MTR-2"))
             master = true;
           actions.push({
             jps: "${baseUrl}/scripts/primaryReplication.jps?_r=${fn.random}",
@@ -56,7 +56,7 @@ actions:
             actions = [], master;
         for (var i = 0, n = envs.length; i < n; i ++) {
           master = false;
-          if ((envs[i] == "${globals.cluster_name}-1") || (envs[i] == "${globals.cluster_name}-2"))
+          if ((envs[i] == "${globals.cluster_name}-MTR-1") || (envs[i] == "${globals.cluster_name}-MTR-2"))
             master = true;
           actions.push({
             jps: "${baseUrl}/scripts/primaryReplication.jps?_r=${fn.random}",
