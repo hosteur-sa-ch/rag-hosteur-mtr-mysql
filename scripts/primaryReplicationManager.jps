@@ -20,6 +20,7 @@ onInstall:
       jps: /addons/db-recovery/manifest.yml?_r=${fn.random}
       nodeGroup: sqldb
       targetNodes: sqldb
+
   - startPrimaryReplication
 
 actions:
@@ -29,9 +30,6 @@ actions:
     - setGlobals:
         nextIndex: ${response.nextIndex}
         clusterEnvs: ${response.items.join(,)}
-
-  setIsClustering
-
 
   initialPrimaryReplication:
     - script: |
